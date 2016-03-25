@@ -2,7 +2,7 @@ local load_time_start = os.clock()
 music = {}
 music.loops = {}
 function music.reset()
-	music.t1 = os.clock()
+	music.t1 = minetest.get_us_time()
 	music.tab = {}
 	music.num = 1
 end
@@ -22,7 +22,7 @@ minetest.register_node("music:play", {
 		for _,i in ipairs(music.tab) do
 			minetest.after(i[2], function(pos)
 				if not music.status then
-					minetest.sound_play(i[1], {pos = pos, gain = 1, max_hear_distance = 10})
+					minetest.sound_play(i[1], {pos = pos})
 					minetest.chat_send_player(puncher:get_player_name(), i[2]..' '..i[1])
 				end
 			end, pos)
@@ -41,7 +41,7 @@ minetest.register_node("music:record", {
 	end,
 	on_punch = function(pos, _, puncher)
 		music.status = "recording"
-		music.t1 = os.clock()
+		music.t1 = minetest.get_us_time()
 		music.tab = {}
 		music.num = 1
 		minetest.chat_send_player(puncher:get_player_name(), 'num, tab and t1 reset')
@@ -71,12 +71,12 @@ minetest.register_node("music:box", {
 		local meta = minetest.get_meta(pos)
 		local soundname = meta:get_string("text")
 		if music.status == "recording" then
-			local delay = tonumber(os.clock() - music.t1)
+			local delay = (minetest.get_us_time() - music.t1)/1000000
 			music.tab[music.num] = {soundname, delay}
 			music.num = music.num+1
-			minetest.chat_send_player(puncher:get_player_name(), delay..' '..soundname)
+			minetest.chat_send_player(puncher:get_player_name(), delay.." "..soundname)
 		end
-		minetest.sound_play(soundname, {pos = pos, gain = 1, max_hear_distance = 10})
+		minetest.sound_play(soundname, {pos = pos})
 	end,
 })
 
@@ -105,17 +105,17 @@ minetest.register_node("music:box2", {
 		local soundnum = tonumber(meta:get_string("hwnd"))
 		if soundnum then
 			minetest.sound_stop(soundnum)
-			meta:set_string("hwnd", nil)
+			meta:set_string("hwnd")
 			music.loops[soundnum] = nil
 			if puncher:get_player_control().sneak then
 				return
 			end
 		end
-		local soundnum = minetest.sound_play(soundname, {pos = pos, gain = 1, max_hear_distance = 10, loop=true})
+		soundnum = minetest.sound_play(soundname, {pos = pos, loop=true})
 		music.loops[soundnum] = true
 		meta:set_string("hwnd", soundnum)
 	end,
-	after_dig_node = function(pos)
+	on_destruct = function(pos)
 		local soundnum = tonumber(minetest.get_meta(pos):get_string("hwnd"))
 		if soundnum then
 			minetest.sound_stop(soundnum)
@@ -124,12 +124,12 @@ minetest.register_node("music:box2", {
 	end
 })
 
-minetest.register_chatcommand('stoploops',{
-	description = 'stops looped sounds',
+minetest.register_chatcommand("stoploops",{
+	description = "stops looped sounds",
 	params = "",
 	privs = {},
 	func = function()
-		for i,_ in pairs(music.loops) do
+		for i in pairs(music.loops) do
 			minetest.sound_stop(i)
 			music.loops[i] = nil
 		end
