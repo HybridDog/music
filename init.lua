@@ -44,7 +44,7 @@ minetest.register_node("music:record", {
 		music.t1 = minetest.get_us_time()
 		music.tab = {}
 		music.num = 1
-		minetest.chat_send_player(puncher:get_player_name(), 'num, tab and t1 reset')
+		minetest.chat_send_player(puncher:get_player_name(), "num, tab and t1 reset")
 	end,
 })
 
@@ -69,7 +69,7 @@ minetest.register_node("music:box", {
 	end,
 	on_punch = function(pos, _, puncher)
 		local meta = minetest.get_meta(pos)
-		local soundname = meta:get_string("text")
+		local soundname = meta:get_string"text"
 		if music.status == "recording" then
 			local delay = (minetest.get_us_time() - music.t1)/1000000
 			music.tab[music.num] = {soundname, delay}
@@ -101,11 +101,11 @@ minetest.register_node("music:box2", {
 	end,
 	on_punch = function(pos, _, puncher)
 		local meta = minetest.get_meta(pos)
-		local soundname = meta:get_string("text")
-		local soundnum = tonumber(meta:get_string("hwnd"))
+		local soundname = meta:get_string"text"
+		local soundnum = tonumber(meta:get_string"hwnd")
 		if soundnum then
 			minetest.sound_stop(soundnum)
-			meta:set_string("hwnd")
+			meta:set_string"hwnd"
 			music.loops[soundnum] = nil
 			if puncher:get_player_control().sneak then
 				return
@@ -116,7 +116,7 @@ minetest.register_node("music:box2", {
 		meta:set_string("hwnd", soundnum)
 	end,
 	on_destruct = function(pos)
-		local soundnum = tonumber(minetest.get_meta(pos):get_string("hwnd"))
+		local soundnum = tonumber(minetest.get_meta(pos):get_string"hwnd")
 		if soundnum then
 			minetest.sound_stop(soundnum)
 			music.loops[soundnum] = nil
